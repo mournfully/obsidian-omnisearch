@@ -17,6 +17,8 @@
 
   export let selected = false
   export let note: ResultNote
+  
+  let heading = app.metadataCache.getCache(note.path)?.headings?.[0]?.heading
 
   let imagePath: string | null = null
   let title = ''
@@ -43,6 +45,9 @@
     notePath = pathWithoutFilename(note.path)
     if (settings.ignoreDiacritics) {
       title = removeDiacritics(title)
+    }
+    if (settings.preferHeadings) {
+      if (heading) title = heading
     }
 
     // Icons

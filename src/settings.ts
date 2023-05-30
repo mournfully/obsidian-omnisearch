@@ -25,6 +25,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   hideExcluded: boolean
   /** Ignore diacritics when indexing files */
   ignoreDiacritics: boolean
+  /** Display heading instead of basename where possible */
+  preferHeadings: boolean
   /** Extensions of plain text files to index, in addition to .md */
   indexedFileTypes: string[]
   /** Enable PDF indexing */
@@ -210,6 +212,21 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
           await database.clearCache()
           settings.ignoreDiacritics = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Prefer Headings
+    const headingsDesc = new DocumentFragment()
+    headingsDesc.createSpan({}, span => {
+      span.innerHTML = `Display heading instead of basename as title if a heading is found in a document.`
+    })
+    new Setting(containerEl)
+      .setName('Prefer Headings')
+      .setDesc(headingsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.preferHeadings).onChange(async v => {
+          settings.preferHeadings = v
           await saveSettings(this.plugin)
         })
       )
@@ -454,6 +471,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   useCache: true,
   hideExcluded: false,
   ignoreDiacritics: true,
+  preferHeadings: false,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
