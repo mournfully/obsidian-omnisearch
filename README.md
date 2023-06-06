@@ -1,62 +1,46 @@
-# Omnisearch for Obsidian
+# Omnisearch for Obsidian 
 
-[![Sponsor me](https://img.shields.io/badge/%E2%9D%A4%20Like%20this%20plugin%3F-Sponsor%20me!-ff69b4)](https://github.com/sponsors/scambier)  
-![Obsidian plugin](https://img.shields.io/endpoint?url=https%3A%2F%2Fscambier.xyz%2Fobsidian-endpoints%2Fomnisearch.json)
-![GitHub release (latest by date and asset)](https://img.shields.io/github/downloads/scambier/obsidian-omnisearch/latest/main.js)  
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch)
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch?include_prereleases&label=BRAT%20beta)
+> I've gotten used to zettelkasten based linking in Zettlr and I especially liked how my titles weren't restricted. Unfortunately, this wasn't easy to replicate in Obsidian and it was quite annoying seeing uuids ("20230407193944") instead of titles ("# § 📗 notes") in omnisearch. Anyway, here's the [code](https://github.com/mournfully/obsidian-omnisearch-with-prefer-headings/tree/feature/prefer-heading-titles).
 
-> **Omnisearch** is a search engine that "_just works_". It always instantly shows you the most relevant results, thanks
-> to its smart weighting algorithm.
+I found the following thread [^1] on the obsidian forum and all the recommended plugins to be quite helpful when I first encountered this problem.
 
-Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
+I used `front-matter-title` [^2] for a long time, until I grew frustrated trying with it's codebase. I especially struggled trying to integrate the provided api (`front-matter-title-api-provider`) with `omnisearch` [^3]. 
 
-![](https://raw.githubusercontent.com/scambier/obsidian-omnisearch/master/images/omnisearch.gif)
+I wasn't able to make much progress with `front-matter-title`, but I did manage to get somewhat close with just `omnisearch`. I added `headings1` to the type `ResultNote`, after realizing that it would be automatically populated by `IndexedDocument`. Then I just changed how titles were rendered by using `note.headings1` instead of `note.basename`. 
 
+[obsidian-omnisearch/ResultItemVault.svelte · scambier/obsidian-omnisearch · GitHub](https://github.com/scambier/obsidian-omnisearch/blob/master/src/components/ResultItemVault.svelte)
+```diff
+  export let note: ResultNote
+  let title = ''
 
-## Documentation
+  $: {
+-   title = note.basename
++   title = note.headings1
+    notePath = pathWithoutFilename(note.path)
+    if (settings.ignoreDiacritics) {
+      title = removeDiacritics(title)
+    }
+  }
+```
 
-https://publish.obsidian.md/omnisearch/Index
+[obsidian-omnisearch/globals.ts at master · scambier/obsidian-omnisearch · GitHub](https://github.com/scambier/obsidian-omnisearch/blob/master/src/globals.ts)
+```diff
+export type ResultNote = {
+  score: number
+  path: string
+  basename: string
++ headings1: string  
+  content: string
+  foundWords: string[]
+  matches: SearchMatch[]
+}
+```
 
-## Installation
+For a myriad of reasons that I can't be bothered to go over here. The approach above was quite naive and couldn't work as I wanted. So, I've chosen to write my own [plugin](https://github.com/mournfully/obsidian-title-overhaul), and to borrow heavily from the `omnisearch` codebase (mostly cause I like the way it's designed).
 
-- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
-- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those
-  versions can be buggy and break things.**
+[^1]: [Use H1 or front-matter title instead of or in addition to filename as display name - Feature requests - Obsidian Forum](https://forum.obsidian.md/t/use-h1-or-front-matter-title-instead-of-or-in-addition-to-filename-as-display-name/687/125)
 
-You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
+[^2]: [snezhig/obsidian-front-matter-title: Plugin for Obsidian.md](https://github.com/snezhig/obsidian-front-matter-title)
 
-## Features
+[^3]: [scambier/obsidian-omnisearch: A search engine that "just works" for Obsidian. Includes OCR and PDF indexing.](https://github.com/scambier/obsidian-omnisearch)
 
-> Omnisearch's first goal is to _locate_ files instantly. You can see it as a _Quick Switcher_ on steroids.
-
-- Find your **📝notes, 📄PDFs, and 🖼images** faster than ever
-  - Images and PDF indexing is available
-    through [Text Extractor](https://github.com/scambier/obsidian-text-extractor)
-- Automatic document scoring using
-  the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
-  - The relevance of a document against a query depends on the number of times the query terms appear in the document,
-    its filename, and its headings
-- Keyboard first: you never have to use your mouse
-- Workflow similar to the "Quick Switcher" core plugin
-- Resistance to typos
-- Switch between Vault and In-file search to quickly skim multiple results in a single note
-- Supports `"expressions in quotes"` and `-exclusions`
-- Filters file types with '.jpg' or '.md'
-- Directly Insert a `[[link]]` from the search results
-- Supports Vim navigation keys
-
-**Note:** support of Chinese, Japanese, Korean, etc. depends
-on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more
-information.
-
-## LICENSE
-
-Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)).
-
-## Thanks
-
-To all people who donate through [Ko-Fi](https://ko-fi.com/scambier)
-or [Github Sponsors](https://github.com/sponsors/scambier) ❤
-
-![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
